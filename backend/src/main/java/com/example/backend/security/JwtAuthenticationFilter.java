@@ -35,13 +35,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             try {
                 Claims claims = jwtUtil.extractClaims(token);
                 String username = claims.getSubject();
-                List<String> roles = (List<String>) claims.get("roles");
+
+                // roles 추출 (확실한 타입 안정성 확보)
+                List<String> roles = claims.get("roles", List.class);
+
+                // ROLE_ prefix 반드시 붙여줘야 Spring Security가 인식 가능
                 var authorities = roles.stream()
-                        .map(SimpleGrantedAuthority::new)
+                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
                         .collect(Collectors.toList());
 
+                // Spring Security에게 사용자 인증정보 등록
                 var auth = new UsernamePasswordAuthenticationToken(username, null, authorities);
                 SecurityContextHolder.getContext().setAuthentication(auth);
+
             } catch (Exception e) {
                 System.out.println("JWT 검증 실패: " + e.getMessage());
             }

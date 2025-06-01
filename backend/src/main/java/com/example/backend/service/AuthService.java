@@ -7,20 +7,21 @@ import com.example.backend.repository.RefreshTokenRepository;
 import com.example.backend.repository.RoleRepository;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.security.JwtUtil;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 
 @Service
+@RequiredArgsConstructor
 public class AuthService {
 
-    @Autowired private UserRepository userRepository;
-    @Autowired private RoleRepository roleRepository;
-    @Autowired private RefreshTokenRepository refreshTokenRepository;
-    @Autowired private JwtUtil jwtUtil;
-    @Autowired private BCryptPasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final JwtUtil jwtUtil;
+    private final BCryptPasswordEncoder passwordEncoder;
 
     public void signup(Map<String, String> body) {
         String username = body.get("username");
@@ -31,9 +32,21 @@ public class AuthService {
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(password));
         user.setEmail(email);
-        Role userRole = roleRepository.findByName("USER").orElseThrow();
-        user.setRoles(Set.of(userRole));
 
+        // 기본 권한 USER 부여
+        Role userRole = roleRepository.findByName("USER")
+                .orElseThrow(() -> new RuntimeException("USER 권한이 존재하지 않습니다."));
+        Set<Role> roles = new HashSet<>();
+        roles.add(userRole);
+
+        // 만약 관리자가 회원가입하면서 ADMIN으로 등록하고 싶을 경우 처리 (옵션)
+        if (body.containsKey("isAdmin") && Boolean.parseBoolean(body.get("isAdmin"))) {
+            Role adminRole = roleRepository.findByName("ADMIN")
+                    .orElseThrow(() -> new RuntimeException("ADMIN 권한이 존재하지 않습니다."));
+            roles.add(adminRole);
+        }
+
+        user.setRoles(roles);
         userRepository.save(user);
     }
 
@@ -41,10 +54,11 @@ public class AuthService {
         String username = body.get("username");
         String password = body.get("password");
 
-        User user = userRepository.findByUsername(username).orElseThrow();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
 
         if (!passwordEncoder.matches(password, user.getPassword()))
-            throw new RuntimeException("Invalid credentials");
+            throw new RuntimeException("아이디 또는 비밀번호가 틀립니다.");
 
         List<String> roles = user.getRoles().stream().map(Role::getName).toList();
         String accessToken = jwtUtil.generateAccessToken(username, roles);
@@ -67,8 +81,8 @@ public class AuthService {
     }
 
     public void logout(String username) {
-        User user = userRepository.findByUsername(username).orElseThrow();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
         refreshTokenRepository.findByUser(user).ifPresent(refreshTokenRepository::delete);
     }
-
 }
