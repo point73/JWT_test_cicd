@@ -13,9 +13,11 @@ export default function AdminRolePage() {
 
   const fetchUsers = async () => {
     try {
-      const res = await api.get('/api/admin/users');
-      setUsers(res.data);
+      const res = await api.get('/admin/users');
+      console.log("유저목록:", res.data);
+      setUsers(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
+      console.error("유저 목록 불러오기 실패", err);
       toast.error('유저 목록 불러오기 실패');
     }
   };
@@ -26,7 +28,7 @@ export default function AdminRolePage() {
       return;
     }
     try {
-      await api.post('/api/admin/assign-role', { username: selectedUser, role });
+      await api.post('/admin/assign-role', { username: selectedUser, role });
       toast.success('권한 부여 완료');
       fetchUsers();
     } catch (err) {
@@ -40,7 +42,7 @@ export default function AdminRolePage() {
       return;
     }
     try {
-      await api.post('/api/admin/remove-role', { username: selectedUser, role });
+      await api.post('/admin/remove-role', { username: selectedUser, role });
       toast.success('권한 제거 완료');
       fetchUsers();
     } catch (err) {

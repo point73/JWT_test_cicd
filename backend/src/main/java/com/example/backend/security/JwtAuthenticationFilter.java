@@ -36,15 +36,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 Claims claims = jwtUtil.extractClaims(token);
                 String username = claims.getSubject();
 
-                // roles 추출 (확실한 타입 안정성 확보)
+                // roles 추출 (이제는 ROLE_ 이 이미 포함되어 있음)
                 List<String> roles = claims.get("roles", List.class);
 
-                // ROLE_ prefix 반드시 붙여줘야 Spring Security가 인식 가능
                 var authorities = roles.stream()
-                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                        .map(SimpleGrantedAuthority::new)
                         .collect(Collectors.toList());
 
-                // Spring Security에게 사용자 인증정보 등록
                 var auth = new UsernamePasswordAuthenticationToken(username, null, authorities);
                 SecurityContextHolder.getContext().setAuthentication(auth);
 

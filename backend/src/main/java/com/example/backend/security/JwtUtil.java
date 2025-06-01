@@ -21,13 +21,17 @@ public class JwtUtil {
     }
 
     public String generateAccessToken(String username, List<String> roles) {
+        List<String> prefixedRoles = roles.stream()
+            .map(role -> "ROLE_" + role)
+            .toList();
+
         return Jwts.builder()
-                .setSubject(username)
-                .claim("roles", roles)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + accessExpiration))
-                .signWith(secretKey)
-                .compact();
+            .setSubject(username)
+            .claim("roles", prefixedRoles)  // ROLE_ 붙여서 토큰에 저장
+            .setIssuedAt(new Date())
+            .setExpiration(new Date(System.currentTimeMillis() + accessExpiration))
+            .signWith(secretKey)
+            .compact();
     }
 
     public String generateRefreshToken(String username) {

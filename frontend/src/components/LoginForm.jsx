@@ -1,9 +1,12 @@
 import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { api } from '../api';
 import { toast } from 'react-toastify';
+import { jwtDecode } from 'jwt-decode';
 
 export default function LoginForm() {
   const [form, setForm] = useState({ username: '', password: '' });
+  const navigate = useNavigate();
 
   const handleChange = e => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -21,8 +24,24 @@ export default function LoginForm() {
       const res = await api.post('/login', form, { withCredentials: true });
       localStorage.setItem('accessToken', res.data.accessToken);
       toast.success("로그인 성공");
+
+      try {
+        const decoded = jwtDecode(res.data.accessToken);
+        const roles = decoded?.roles || [];
+
+        if (roles.includes('ROLE_ADMIN')) {
+          navigate('/admin');
+        } else {
+          navigate('/');
+        }
+      } catch (decodeErr) {
+        localStorage.removeItem('accessToken');
+        toast.error("토큰 디코딩 실패. 다시 로그인하세요.");
+        navigate('/login');
+      }
+
     } catch (err) {
-      if (err.response && err.response.status === 401) {
+      if (err.response?.status === 401) {
         toast.error("아이디 또는 비밀번호가 틀립니다.");
       } else {
         toast.error("로그인 실패: 서버 오류");
@@ -36,6 +55,10 @@ export default function LoginForm() {
       <input name="username" placeholder="username" onChange={handleChange} /><br />
       <input name="password" type="password" placeholder="password" onChange={handleChange} /><br />
       <button>로그인</button>
+
+      <div style={{ marginTop: '10px' }}>
+        <Link to="/signup">회원가입 하기</Link>
+      </div>
     </form>
   );
 }
