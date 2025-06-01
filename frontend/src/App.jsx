@@ -1,5 +1,6 @@
 import SignupForm from './components/SignupForm';
 import LoginForm from './components/LoginForm';
+import AdminRolePage from './components/AdminRolePage';
 import { api } from './api';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -40,11 +41,21 @@ function App() {
   return (
     <div>
       <h1>JWT Access/Refresh 인증 예제</h1>
+      
       <SignupForm />
       <LoginForm />
-      <button onClick={callUserApi}>유저 API 호출</button>
-      <button onClick={callAdminApi}>어드민 API 호출</button>
-      <button onClick={logout}>로그아웃</button>
+      
+      <div style={{ marginTop: '20px' }}>
+        <button onClick={callUserApi}>유저 API 호출</button>
+        <button onClick={callAdminApi}>어드민 API 호출</button>
+        <button onClick={logout}>로그아웃</button>
+      </div>
+
+      <div style={{ marginTop: '40px' }}>
+        <h2>🔐 권한 관리 (관리자용)</h2>
+        <AdminRolePage />
+      </div>
+
       <ToastContainer />
     </div>
   );
