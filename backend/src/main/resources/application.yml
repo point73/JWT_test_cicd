@@ -1,19 +1,12 @@
 spring:
-  datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+  profiles:
+    active: dev   # 기본값: dev (배포 시 prod로 override)
+
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
+
   security:
     user:
-      password: disabled  # default security 비밀번호 끔
-
-jwt:
-  secret: ${JWT_SECRET}
-
-server:
-  port: 8080
-
+      password: disabled
