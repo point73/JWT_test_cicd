@@ -4,6 +4,8 @@ import com.example.backend.service.AuthService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseCookie;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -39,8 +41,8 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public void logout(@RequestBody Map<String, String> body, HttpServletResponse response) {
-        String username = body.get("username");
+    public void logout(@AuthenticationPrincipal UserDetails userDetails, HttpServletResponse response) {
+        String username = userDetails.getUsername();
         authService.logout(username);
 
         // refreshToken 쿠키 삭제

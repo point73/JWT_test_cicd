@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { api } from '../api';
 import { toast } from 'react-toastify';
-import { jwtDecode } from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode'; // ✅ 여기서 import는 이렇게 (default export)
 
-export default function LoginForm() {
+export default function LoginForm({ onLogin }) {  // ✅ 상위 컴포넌트에서 props로 받아옴
   const [form, setForm] = useState({ username: '', password: '' });
   const navigate = useNavigate();
 
@@ -22,22 +22,22 @@ export default function LoginForm() {
 
     try {
       const res = await api.post('/login', form, { withCredentials: true });
-      localStorage.setItem('accessToken', res.data.accessToken);
+      const token = res.data.accessToken;
+
+      localStorage.setItem('accessToken', token);
       toast.success("로그인 성공");
 
-      try {
-        const decoded = jwtDecode(res.data.accessToken);
-        const roles = decoded?.roles || [];
+      // ✅ 상위 App으로 전달해서 App이 token 상태관리 시작
+      if (onLogin) onLogin(token);
 
-        if (roles.includes('ROLE_ADMIN')) {
-          navigate('/admin');
-        } else {
-          navigate('/');
-        }
-      } catch (decodeErr) {
-        localStorage.removeItem('accessToken');
-        toast.error("토큰 디코딩 실패. 다시 로그인하세요.");
-        navigate('/login');
+      // ✅ 토큰 디코딩 및 권한 확인
+      const decoded = jwtDecode(token);
+      const roles = decoded?.roles || [];
+
+      if (roles.includes('ROLE_ADMIN')) {
+        navigate('/admin');
+      } else {
+        navigate('/');
       }
 
     } catch (err) {
