@@ -22,31 +22,17 @@ export default function AdminRolePage() {
     }
   };
 
-  const assignRole = async () => {
+  const handleRoleChange = async (action) => {
     if (!selectedUser || !role) {
       toast.warning('유저와 권한을 선택하세요');
       return;
     }
     try {
-      await api.post('/admin/assign-role', { username: selectedUser, role });
-      toast.success('권한 부여 완료');
+      await api.post(`/admin/${action}-role`, { username: selectedUser, role });
+      toast.success(`권한 ${action === 'assign' ? '부여' : '제거'} 완료`);
       fetchUsers();
     } catch (err) {
-      toast.error('권한 부여 실패');
-    }
-  };
-
-  const removeRole = async () => {
-    if (!selectedUser || !role) {
-      toast.warning('유저와 권한을 선택하세요');
-      return;
-    }
-    try {
-      await api.post('/admin/remove-role', { username: selectedUser, role });
-      toast.success('권한 제거 완료');
-      fetchUsers();
-    } catch (err) {
-      toast.error('권한 제거 실패');
+      toast.error(`권한 ${action === 'assign' ? '부여' : '제거'} 실패`);
     }
   };
 
@@ -56,17 +42,27 @@ export default function AdminRolePage() {
 
       <div style={styles.formGroup}>
         <label style={styles.label}>유저 선택:</label>
-        <select style={styles.select} value={selectedUser} onChange={(e) => setSelectedUser(e.target.value)}>
+        <select
+          style={styles.select}
+          value={selectedUser}
+          onChange={(e) => setSelectedUser(e.target.value)}
+        >
           <option value="">-- 유저 선택 --</option>
           {users.map((user, idx) => (
-            <option key={idx} value={user}>{user}</option>
+            <option key={idx} value={user.username}>
+              {user.username}
+            </option>
           ))}
         </select>
       </div>
 
       <div style={styles.formGroup}>
         <label style={styles.label}>권한 선택:</label>
-        <select style={styles.select} value={role} onChange={(e) => setRole(e.target.value)}>
+        <select
+          style={styles.select}
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+        >
           <option value="">-- 권한 선택 --</option>
           <option value="USER">USER</option>
           <option value="ADMIN">ADMIN</option>
@@ -74,8 +70,8 @@ export default function AdminRolePage() {
       </div>
 
       <div style={styles.buttonGroup}>
-        <button style={styles.assignBtn} onClick={assignRole}>권한 부여</button>
-        <button style={styles.removeBtn} onClick={removeRole}>권한 제거</button>
+        <button style={styles.assignBtn} onClick={() => handleRoleChange('assign')}>권한 부여</button>
+        <button style={styles.removeBtn} onClick={() => handleRoleChange('remove')}>권한 제거</button>
       </div>
     </div>
   );
